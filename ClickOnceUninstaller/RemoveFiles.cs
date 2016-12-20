@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Wunder.ClickOnceUninstaller
 {
@@ -77,6 +78,9 @@ namespace Wunder.ClickOnceUninstaller
                     Directory.Delete(folder, true);
                 }
                 catch (UnauthorizedAccessException)
+                {
+                }
+                catch (IOException ex) when ((uint)Marshal.GetHRForException(ex) == 0x80070020) // File in use
                 {
                 }
             }
