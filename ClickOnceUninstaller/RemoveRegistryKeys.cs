@@ -62,25 +62,26 @@ namespace Wunder.ClickOnceUninstaller
             }
 
             var token = _uninstallInfo.GetPublicKeyToken();
+            var applicationAbbreviation = _uninstallInfo.GetApplicationNameAbbreviation();
 
             var packageMetadata = Registry.CurrentUser.OpenSubKey(PackageMetadataRegistryPath);
             foreach (var keyName in packageMetadata.GetSubKeyNames())
             {
-                DeleteMatchingSubKeys(PackageMetadataRegistryPath + "\\" + keyName, token);
+                DeleteMatchingSubKeys(PackageMetadataRegistryPath + "\\" + keyName, token, applicationAbbreviation);
             }
 
-            DeleteMatchingSubKeys(ApplicationsRegistryPath, token);
-            DeleteMatchingSubKeys(FamiliesRegistryPath, token);
-            DeleteMatchingSubKeys(VisibilityRegistryPath, token);
+            DeleteMatchingSubKeys(ApplicationsRegistryPath, token, applicationAbbreviation);
+            DeleteMatchingSubKeys(FamiliesRegistryPath, token, applicationAbbreviation);
+            DeleteMatchingSubKeys(VisibilityRegistryPath, token, applicationAbbreviation);
         }
 
-        private void DeleteMatchingSubKeys(string registryPath, string token)
+        private void DeleteMatchingSubKeys(string registryPath, string token, string applicationNameAbbreviation)
         {
             var key = Registry.CurrentUser.OpenSubKey(registryPath, true);
             _disposables.Add(key);
             foreach (var subKeyName in key.GetSubKeyNames())
             {
-                if (subKeyName.Contains(token))
+                if (subKeyName.IndexOf(string.Format("{0}_{1}", applicationNameAbbreviation, token), StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     _keysToRemove.Add(new RegistryMarker(key, subKeyName));
                 }
