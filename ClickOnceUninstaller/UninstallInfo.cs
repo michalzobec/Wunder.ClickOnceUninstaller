@@ -59,5 +59,23 @@ namespace Wunder.ClickOnceUninstaller
             if (token.Length != 16) throw new ArgumentException();
             return token;
         }
+
+        public string GetApplicationName()
+        {
+            var name = UninstallString.Split(',').First(s => s.Trim().StartsWith("ShArpMaintain ")).Substring(14);
+            if (name.Length <= 0) throw new ArgumentException();
+            return name;
+        }
+
+        public string GetApplicationNameAbbreviation()
+        {
+            var appName = GetApplicationName();
+            if (appName.Length <= 10)
+            {
+                return appName;
+            }
+
+            return appName.Substring(0, 4) + ".." + appName.Substring(appName.Length - 4);
+        }
     }
 }

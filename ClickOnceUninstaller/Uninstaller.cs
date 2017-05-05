@@ -20,7 +20,7 @@ namespace Wunder.ClickOnceUninstaller
 
         public void Uninstall(UninstallInfo uninstallInfo)
         {
-            var toRemove = FindComponentsToRemove(uninstallInfo.GetPublicKeyToken());
+            var toRemove = FindComponentsToRemove(uninstallInfo.GetPublicKeyToken(), uninstallInfo.GetApplicationNameAbbreviation());
 
             Console.WriteLine("Components to remove:");
             toRemove.ForEach(Console.WriteLine);
@@ -41,9 +41,9 @@ namespace Wunder.ClickOnceUninstaller
             steps.ForEach(s => s.Dispose());
         }
 
-        private List<string> FindComponentsToRemove(string token)
+        private List<string> FindComponentsToRemove(string token, string applicationNameAbbreviation)
         {
-            var components = _registry.Components.Where(c => c.Key.Contains(token)).ToList();
+            var components = _registry.Components.Where(c => c.Key.Contains(token) && c.Key.StartsWith(applicationNameAbbreviation, StringComparison.OrdinalIgnoreCase)).ToList();
 
             var toRemove = new List<string>();
             foreach (var component in components)
