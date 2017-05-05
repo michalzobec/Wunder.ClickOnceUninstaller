@@ -8,12 +8,18 @@ namespace Wunder.ClickOnceUninstaller
     public class RemoveStartMenuEntry : IUninstallStep
     {
         private readonly UninstallInfo _uninstallInfo;
+        private readonly bool _deepScan;
         private List<string> _foldersToRemove;
         private List<string> _filesToRemove;
 
         public RemoveStartMenuEntry(UninstallInfo uninstallInfo)
+            : this(uninstallInfo, true)
+        { }
+
+        public RemoveStartMenuEntry(UninstallInfo uninstallInfo, bool deepScan)
         {
             _uninstallInfo = uninstallInfo;
+            _deepScan = deepScan;
         }
 
         public void Prepare(List<string> componentsToRemove)
@@ -31,6 +37,14 @@ namespace Wunder.ClickOnceUninstaller
             if (File.Exists(shortcut)) _filesToRemove.Add(shortcut);
             if (File.Exists(supportShortcut)) _filesToRemove.Add(supportShortcut);
             if (File.Exists(desktopShortcut)) _filesToRemove.Add(desktopShortcut);
+            if (_deepScan)
+            {
+                DeepScan(programsFolder);
+                DeepScan(desktopFolder);
+                var applicationDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var pinnedFolder = Path.Combine(applicationDataFolder, @"Microsoft\Internet Explorer\Quick Launch\User Pinned");
+                DeepScan(pinnedFolder);
+            }
 
             _foldersToRemove = new List<string>();
             if (Directory.Exists(suiteFolder) && Directory.GetFiles(suiteFolder).All(d => _filesToRemove.Contains(d)))
@@ -39,6 +53,18 @@ namespace Wunder.ClickOnceUninstaller
 
                 if (Directory.GetDirectories(folder).Count() == 1 && !Directory.GetFiles(folder).Any())
                     _foldersToRemove.Add(folder);
+            }
+        }
+
+        private void DeepScan(string folder)
+        {
+            foreach (var shortcutName in Directory.GetFiles(folder, "*.appref-ms", SearchOption.AllDirectories))
+            {
+                string content = File.ReadAllText(shortcutName);
+                if (!String.IsNullOrEmpty(content) &&
+                    String.Equals(_uninstallInfo.ShortcutAppId, content, StringComparison.InvariantCultureIgnoreCase) &&
+                    !_filesToRemove.Contains(shortcutName))
+                    _filesToRemove.Add(shortcutName);
             }
         }
 
