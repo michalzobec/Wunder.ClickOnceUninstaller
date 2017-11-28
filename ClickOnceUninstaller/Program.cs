@@ -15,7 +15,7 @@ namespace Wunder.ClickOnceUninstaller
 
             var appName = args[0];
 
-            var uninstallInfo = UninstallInfo.Find(appName);
+            var uninstallInfo = UninstallInfo.FindByName(appName);
             if (uninstallInfo == null)
             {
                 Console.WriteLine("Could not find application \"{0}\"", appName);

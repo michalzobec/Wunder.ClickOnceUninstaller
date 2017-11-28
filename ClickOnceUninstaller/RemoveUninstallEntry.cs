@@ -6,8 +6,9 @@ namespace Wunder.ClickOnceUninstaller
 {
     public class RemoveUninstallEntry : IUninstallStep
     {
+        private const string CurrentUserPathPrefix = @"HKEY_CURRENT_USER\";
         private readonly UninstallInfo _uninstallInfo;
-        private RegistryKey _uninstall;
+        private string _path;
 
         public RemoveUninstallEntry(UninstallInfo uninstallInfo)
         {
@@ -16,33 +17,34 @@ namespace Wunder.ClickOnceUninstaller
 
         public void Prepare(List<string> componentsToRemove)
         {
-            _uninstall = Registry.CurrentUser.OpenSubKey(UninstallInfo.UninstallRegistryPath, true);
+            if (_uninstallInfo?.KeyPath.StartsWith(CurrentUserPathPrefix, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                _path = _uninstallInfo.KeyPath.Substring(CurrentUserPathPrefix.Length);
+            }
         }
 
         public void PrintDebugInformation()
         {
-            if (_uninstall == null)
+            if (_path == null)
                 throw new InvalidOperationException("Call Prepare() first.");
 
-            Console.WriteLine("Remove uninstall info from " + _uninstall.OpenSubKey(_uninstallInfo.Key).Name);
-
+            Console.WriteLine("Remove uninstall info from " + Registry.CurrentUser.OpenSubKey(_path).Name);
             Console.WriteLine();
         }
 
         public void Execute()
         {
-            if (_uninstall == null)
+            if (_path == null)
                 throw new InvalidOperationException("Call Prepare() first.");
 
-            _uninstall.DeleteSubKey(_uninstallInfo.Key);
+            Registry.CurrentUser.DeleteSubKey(_path);
         }
 
         public void Dispose()
         {
-            if (_uninstall != null)
+            if (_path != null)
             {
-                _uninstall.Close();
-                _uninstall = null;
+                _path = null;
             }
         }
     }
