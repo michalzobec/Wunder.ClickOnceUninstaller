@@ -58,6 +58,11 @@ namespace Wunder.ClickOnceUninstaller
 
         private void DeepScan(string folder)
         {
+            if (!Directory.Exists(folder))
+            {
+                return;
+            }
+
             foreach (var shortcutName in Directory.GetFiles(folder, "*.appref-ms", SearchOption.AllDirectories))
             {
                 string content = File.ReadAllText(shortcutName);
